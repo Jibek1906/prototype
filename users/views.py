@@ -5,6 +5,7 @@ from django.utils import timezone
 from django.contrib.auth.decorators import login_required
 from .forms import UserDetailsForm
 from django.contrib.auth.models import User
+from datetime import datetime
 from .forms import LoginForm
 from .models import UserDetails, WeightRecord
 from .forms import CustomUserCreationForm
@@ -17,14 +18,7 @@ def register(request):
         form = CustomUserCreationForm(request.POST)
         if form.is_valid():
             user = form.save()
-            UserDetails.objects.create(
-                user=user,
-                height=170,
-                weight=70,
-                goal='maintain',
-                training_level='beginner'
-            )
-            return redirect('user_details', user_id=user.id)  # Перенаправляем на страницу user_details
+            return redirect('user_details', user_id=user.id)
     else:
         form = CustomUserCreationForm()
     return render(request, 'registration.html', {'form': form})
@@ -35,17 +29,20 @@ def login_view(request):
         if form.is_valid():
             email = form.cleaned_data.get('email')
             password = form.cleaned_data.get('password')
-            user = authenticate(request, username=email, password=password)  # Используем email как username
-            if user is not None:
-                login(request, user)
-                return redirect('personal_office', user_id=user.id)
-            else:
-                form.add_error(None, "Invalid email or password.")
+            try:
+                user = User.objects.get(email=email)
+                user = authenticate(request, username=user.username, password=password)
+                if user is not None:
+                    login(request, user)
+                    return redirect('personal_office', user_id=user.id)
+                else:
+                    form.add_error(None, "Invalid email or password.")
+            except User.DoesNotExist:
+                form.add_error('email', "No user found with this email.")
     else:
         form = LoginForm()
 
     return render(request, 'login.html', {'form': form})
-
 
 def user_details(request, user_id):
     user = get_object_or_404(User, id=user_id)
@@ -65,13 +62,20 @@ def user_details(request, user_id):
 
     if form.is_valid():
         form.save()
-        return redirect('login')  # Redirect to login after user details
+        return redirect('login')
     return render(request, 'user_details.html', {'form': form, 'user_details': user_details})
+
+def calculate_age(birth_date):
+    today = datetime.today()
+    return today.year - birth_date.year - ((today.month, today.day) < (birth_date.month, birth_date.day))
 
 @login_required
 def personal_office(request, user_id):
     user_details = get_object_or_404(UserDetails, user__id=user_id)
     weight_records = WeightRecord.objects.filter(user=user_details).order_by('date')
+
+    birth_date = user_details.birth_date
+    age = calculate_age(birth_date)
 
     labels = [record.date.strftime('%d.%m.%Y') for record in weight_records]
     weights = [record.weight for record in weight_records]
@@ -80,6 +84,7 @@ def personal_office(request, user_id):
         'user_details': user_details,
         'labels': labels,
         'weights': weights,
+        'age': age,
     }
 
     return render(request, 'personal_office.html', context)

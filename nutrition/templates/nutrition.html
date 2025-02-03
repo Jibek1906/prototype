@@ -1,48 +1,34 @@
-{% load static %}
-
 <!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="stylesheet" href="{% static 'css/nutrition.css' %}" />
+    <link rel="stylesheet" href="../static/css/nutrition.css" />
     <title>Calories Counter</title>
   </head>
-
   <body>
     <header class="header">
       <div class="logo">VIBE<span>FIT</span></div>
       <nav>
         <ul>
           <li>
-            <a href="{% url 'main' %}">
-              <h2>Home</h2>
-            </a>
+            <a href="#"><h2>Home</h2></a>
           </li>
           <li>
-            <a href="">
-              <h2>About</h2>
-            </a>
+            <a href="#"><h2>About</h2></a>
           </li>
           <li>
-            <a href="">
-              <h2>Contact Us</h2>
-            </a>
+            <a href="#"><h2>Contact Us</h2></a>
           </li>
           <li>
-            <a href="{% url 'workouts' %}">
-              <h2>Workouts</h2>
-            </a>
+            <a href="http://127.0.0.1:5000/workouts"><h2>Workouts</h2></a>
           </li>
           <li>
-            <a href="">
-              <h2>Nutrition</h2>
-            </a>
+            <a href="http://127.0.0.1:5000/nutrition"><h2>Nutrition</h2></a>
           </li>
         </ul>
       </nav>
     </header>
-
     <div class="container">
       <div class="calendar">
         <div class="calendar-header">
@@ -81,6 +67,9 @@
         <div class="remaining-calories" id="remaining-calories">
           Remaining Calories: 1200 kcal
         </div>
+        <div class="training-recommendation" id="training-recommendation">
+          <!-- Рекомендации по тренировкам будут здесь -->
+        </div>
       </div>
     </div>
 
@@ -111,6 +100,51 @@
       </div>
     </div>
 
-    <script src="{% static 'js/nutrition.js' %}"></script>
+    <script>
+      // Логика для расчета калорий и рекомендаций
+      async function calculateCalories() {
+        const response = await fetch("/api/user-details"); // Получаем данные пользователя
+        const userDetails = await response.json();
+
+        const { weight, height, training_level, goal } = userDetails;
+
+        // Отправляем данные на сервер для расчета калорий
+        const calorieResponse = await fetch("/api/calculate-calories", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ weight, height, training_level, goal }),
+        });
+        const { daily_calorie_goal } = await calorieResponse.json();
+
+        // Обновляем интерфейс
+        document.getElementById(
+          "remaining-calories"
+        ).textContent = `Remaining Calories: ${daily_calorie_goal} kcal`;
+      }
+
+      // Логика для рекомендаций по тренировкам
+      async function getTrainingRecommendation(caloriesConsumed) {
+        const response = await fetch("/api/training-recommendation", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ calories_consumed: caloriesConsumed }),
+        });
+        const { recommendation } = await response.json();
+
+        // Отображаем рекомендацию
+        document.getElementById("training-recommendation").textContent =
+          recommendation;
+      }
+
+      // Вызываем функции при загрузке страницы
+      window.onload = () => {
+        calculateCalories();
+        getTrainingRecommendation(1500); // Пример: передаем потребленные калории
+      };
+    </script>
   </body>
 </html>

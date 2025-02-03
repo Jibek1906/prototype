@@ -85,7 +85,7 @@
             <a href="{% url 'workouts' %}"><h2>Workouts</h2></a>
           </li>
           <li>
-            <a href="{% url 'log_food' %}"><h2>Nutrition</h2></a>
+            <a href=""><h2>Nutrition</h2></a>
           </li>
         </ul>
       </nav>
@@ -94,10 +94,7 @@
     <div class="container">
       <div class="card">
         <div class="avatar-container">
-          <img
-            src="{{ user_details.avatar.url|default:'{% static "images/placeholder.png" %}' }}"
-            alt="User Avatar"
-          />
+          <img src="{% if user_details.avatar %}{{ user_details.avatar.url }}{% else %}{% static 'images/placeholder.png' %}{% endif %}" alt="User Avatar" />
         </div>
         <div class="details">
           <h2 class="user">
@@ -105,6 +102,7 @@
           </h2>
           <p><strong>Height:</strong> {{ user_details.height }} cm</p>
           <p><strong>Weight:</strong> {{ user_details.weight }} kg</p>
+          <p><strong>Age:</strong> {{ age }}</p>
           <p><strong>Goal:</strong> {{ user_details.get_goal_display }}</p>
           <p><strong>Training level:</strong> {{ user_details.get_training_level_display }}</p>
           <button class="edit-btn" id="editBtn">Edit</button>

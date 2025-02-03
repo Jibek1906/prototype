@@ -1,5 +1,4 @@
-from django.contrib import admin
-from . import models
+# from django.contrib import admin
+# from .models import CaloricIntake
 
-admin.site.register(models.FoodItem)
-admin.site.register(models.UserFoodLog)
+# admin.site.register(CaloricIntake)

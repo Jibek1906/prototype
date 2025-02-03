@@ -29,7 +29,7 @@ class CustomUserCreationForm(forms.ModelForm):
 
     def save(self, commit=True):
         user = super().save(commit=False)
-        user.set_password(self.cleaned_data["password"])  # Хэшируем пароль
+        user.set_password(self.cleaned_data["password"])
         if commit:
             user.save()
         return user
@@ -37,8 +37,10 @@ class CustomUserCreationForm(forms.ModelForm):
 class UserDetailsForm(forms.ModelForm):
     class Meta:
         model = UserDetails
-        fields = ['height', 'weight', 'goal', 'training_level', 'avatar']
-
+        fields = ['height', 'weight', 'goal', 'training_level', 'birth_date']
+        widgets = {
+            'birth_date': forms.DateInput(attrs={'type': 'date'}),
+        }
 class LoginForm(forms.Form):
     email = forms.EmailField(label='Email', max_length=254)
     password = forms.CharField(label='Password', widget=forms.PasswordInput)

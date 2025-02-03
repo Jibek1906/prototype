@@ -18,6 +18,7 @@ class UserDetails(models.Model):
     ]
     training_level = models.CharField(max_length=50, choices=training_level_choices)
     avatar = models.ImageField(upload_to='avatars/', default='avatars/default_avatar.png', blank=True, null=True)
+    birth_date = models.DateField(null=True)
 
     def __str__(self):
         return self.user.username

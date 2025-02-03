@@ -1,29 +1,18 @@
-from django.shortcuts import render, redirect
-from django.contrib.auth.decorators import login_required
-from .ai_module import suggest_activity
-from workouts.models import Workout
-from .models import FoodItem
+# from django.shortcuts import render
+# from .models import CaloricIntake
 
-def log_food(request):
-    if request.method == 'POST':
-        food_item_id = request.POST.get('food_item_id')
-        quantity = int(request.POST.get('quantity'))
-        user = request.user.userdetails
-        food_item = FoodItem.objects.get(id=food_item_id)
-        log = UserFoodLog(user=user, food_item=food_item, quantity=quantity)
-        log.save()
+# def calculate_calories(request):
+#     if request.method == 'POST':
+#         # Получаем данные из формы
+#         weight = request.POST.get('weight')
+#         height = request.POST.get('height')
+#         training_level = request.POST.get('training_level')
+#         goal = request.POST.get('goal')
 
-        today = date.today()
-        last_week = today - timedelta(days=7)
-        food_logs = UserFoodLog.objects.filter(user=user, date__gte=last_week)
-        workout_logs = WorkoutLog.objects.filter(user=user, date__gte=last_week)
+#         # Создаём или обновляем объект CaloricIntake
+#         caloric_intake, created = CaloricIntake.objects.get_or_create(user=request.user.userdetails)
+#         caloric_intake.calculate_calories()
 
-        analytics = suggest_activity(user, food_logs, workout_logs)
-
-        return render(request, 'nutrition.html', {
-            'analytics': analytics,
-            'food_items': FoodItem.objects.all()
-        })
-
-    food_items = FoodItem.objects.all()
-    return render(request, 'nutrition.html', {'food_items': food_items})
+#         return render(request, 'nutrition/caloric_intake.html', {'caloric_intake': caloric_intake})
+#     else:
+#         return render(request, 'nutrition/calculate_calories.html')
