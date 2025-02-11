@@ -109,3 +109,15 @@ p a {
     color: #000000;
     text-decoration: none;
 }
+
+.avatar-image {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    width: 0 !important;
+    height: 0 !important;
+}
+
+.user-info {
+    display: none;
+  }  

@@ -17,7 +17,7 @@
     <div class="page-container">
       <div class="form-container">
         <h1>Заполните свои данные, чтобы получить персонализированный план</h1>
-        <form method="post">
+        <form method="post" enctype="multipart/form-data">
           {% csrf_token %} {{ form.as_p }} {% if form.errors %}
           <div class="error-messages">
             {% for field in form %} {% if field.errors %}
@@ -32,22 +32,6 @@
           {% endif %}
           <button type="submit" class="save-button">Сохранить</button>
         </form>
-
-        <div class="user-info">
-          {% if user_details.avatar %}
-          <img
-            src="{{ user_details.avatar.url }}"
-            alt="Аватар пользователя"
-            class="avatar-image"
-          />
-          {% else %}
-          <img
-            src="{% static 'avatars/default_avatar.png' %}"
-            alt="Аватар по умолчанию"
-            class="avatar-image"
-          />
-          {% endif %}
-        </div>
       </div>
     </div>
   </body>
