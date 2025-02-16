@@ -31,7 +31,7 @@ def register(request):
             )
             
             login(request, user)
-            return redirect('personal_office', user_id=user.id)
+            return redirect('personal_office')
     else:
         form = CustomUserCreationForm()
     return render(request, 'registration.html', {'form': form})
@@ -128,6 +128,6 @@ def update_user_details(request, user_id):
             date=timezone.now().date()
         )
 
-        return redirect('personal_office', user_id=user_details.user.id)
+        return redirect('personal_office')
 
     return render(request, 'users/personal_office.html', {'user_details': user_details})
