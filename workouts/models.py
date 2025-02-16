@@ -26,4 +26,4 @@ class Workout(models.Model):
     
     def get_current_week_number(self, date):
         week_number = date.isocalendar()[1]
-        return (week_number // self.repeat_interval) * self.repeat_interval
+        return week_number // self.repeat_interval * self.repeat_interval

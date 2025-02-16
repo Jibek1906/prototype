@@ -4,7 +4,7 @@ from django.http import JsonResponse
 from .models import Workout
 from users.models import UserDetails
 from datetime import datetime
-from django.db.models import F
+from django.db.models import F, ExpressionWrapper, IntegerField, Q
 
 @login_required
 def workouts_view(request):
@@ -33,12 +33,11 @@ def workouts_view(request):
             (week_number % F('repeat_interval')) == 0
         )
 
-        print(f"User's goal: {user_details.goal}")
-        print(f"User's training level: {user_details.training_level}")
-        print(f"User's weight: {user_details.weight}")
-        print(f"Day of week: {day_of_week}")
-        print(f"Week number: {week_number}")
-        print(f"Filtered workouts: {workouts}")
+        # Проверяем, какие тренировки фильтруются
+        print(f"Filtering workouts for {user_details.user.username}:")
+        print(f"Goal: {user_details.goal}, Training Level: {user_details.training_level}")
+        print(f"Weight: {user_details.weight}, Day: {day_of_week}, Week: {week_number}")
+        print(f"Filtered workouts: {list(workouts)}")
 
     else:
         workouts = Workout.objects.none()
@@ -73,15 +72,17 @@ def workouts_api(request):
     except ValueError:
         return JsonResponse({'error': 'Invalid date format'}, status=400)
 
-    workouts = Workout.objects.filter(
-        day_of_week=day_of_week,
-        week_number=week_number,
-        goal=user_details.goal,
-        training_level=user_details.training_level,
-        min_weight__lte=user_details.weight,
-        max_weight__gte=user_details.weight
+    # Используем Q для сложных условий
+    workouts = Workout.objects.annotate(
+        week_mod=ExpressionWrapper(F('week_number') % F('repeat_interval'), output_field=IntegerField())
     ).filter(
-        (week_number % F('repeat_interval')) == 0
-    ).values('title', 'description', 'video_url')
+        Q(day_of_week=day_of_week) &
+        Q(goal=user_details.goal) &
+        Q(training_level=user_details.training_level) &
+        Q(min_weight__lte=user_details.weight) &
+        Q(max_weight__gte=user_details.weight) &
+        Q(week_mod=0)  # Фильтруем по остатку от деления
+        ).values('title', 'description', 'video_url')
+
 
     return JsonResponse({'workouts': list(workouts)}, safe=False)
