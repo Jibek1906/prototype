@@ -32,6 +32,14 @@ class CustomUserCreationForm(forms.ModelForm):
         user.set_password(self.cleaned_data["password"])
         if commit:
             user.save()
+            # Создаем UserDetails для нового пользователя
+            UserDetails.objects.create(
+                user=user,
+                height=170,  # Дефолтное значение
+                weight=70,   # Дефолтное значение
+                goal='maintain',  # Дефолтное значение
+                training_level='beginner'  # Дефолтное значение
+            )
         return user
 
 class UserDetailsForm(forms.ModelForm):
@@ -41,6 +49,7 @@ class UserDetailsForm(forms.ModelForm):
         widgets = {
             'birth_date': forms.DateInput(attrs={'type': 'date'}),
         }
+
 class LoginForm(forms.Form):
     email = forms.EmailField(label='Email', max_length=254)
     password = forms.CharField(label='Password', widget=forms.PasswordInput)

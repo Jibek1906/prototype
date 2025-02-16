@@ -8,5 +8,6 @@ class EmailAuthBackend(ModelBackend):
         except User.DoesNotExist:
             return None
         if user.check_password(password):
+            request.user = user  # Добавлено обновление request.user
             return user
         return None

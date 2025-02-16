@@ -18,7 +18,20 @@ def register(request):
         form = CustomUserCreationForm(request.POST)
         if form.is_valid():
             user = form.save()
-            return redirect('user_details', user_id=user.id)
+            
+            UserDetails.objects.get_or_create(
+                user=user,
+                defaults={
+                    'height': 170,
+                    'weight': 70,
+                    'goal': 'maintain',
+                    'training_level': 'beginner',
+                    'birth_date': '2000-01-01'
+                }
+            )
+            
+            login(request, user)
+            return redirect('personal_office', user_id=user.id)
     else:
         form = CustomUserCreationForm()
     return render(request, 'registration.html', {'form': form})
@@ -34,7 +47,7 @@ def login_view(request):
                 user = authenticate(request, username=user.username, password=password)
                 if user is not None:
                     login(request, user)
-                    return redirect('personal_office', user_id=user.id)
+                    return redirect('personal_office')
                 else:
                     form.add_error(None, "Invalid email or password.")
             except User.DoesNotExist:
@@ -70,8 +83,8 @@ def calculate_age(birth_date):
     return today.year - birth_date.year - ((today.month, today.day) < (birth_date.month, birth_date.day))
 
 @login_required
-def personal_office(request, user_id):
-    user_details = get_object_or_404(UserDetails, user__id=user_id)
+def personal_office(request):
+    user_details = get_object_or_404(UserDetails, user=request.user)
     weight_records = WeightRecord.objects.filter(user=user_details).order_by('date')
 
     birth_date = user_details.birth_date

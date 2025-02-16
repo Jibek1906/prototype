@@ -1,6 +1,6 @@
 from django.contrib import admin
-from . import models
+from .models import UserDetails
 
-admin.site.register(models.UserDetails)
-admin.site.register(models.WeightRecord)
-
+@admin.register(UserDetails)
+class UserDetailsAdmin(admin.ModelAdmin):
+    list_display = ('user', 'height', 'weight', 'goal', 'training_level')

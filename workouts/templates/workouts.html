@@ -22,12 +22,10 @@
             <a href="#"><h2>Contact Us</h2></a>
           </li>
           <li>
-            <a href="{% url 'personal_office' request.user.id %}"
-              ><h2>Personal Office</h2></a
-            >
+            <a href="{% url 'personal_office' %}"><h2>Personal Office</h2></a>
           </li>
           <li>
-            <a href=""><h2>Nutrition</h2></a>
+            <a href="#"><h2>Nutrition</h2></a>
           </li>
         </ul>
       </nav>
@@ -44,11 +42,26 @@
 
       <div class="workout-details" id="workout-details">
         <h3>Workouts for <span id="selected-date"></span></h3>
-        <div id="workout-list"></div>
+        <div id="workout-list">
+          {% if workouts %} {% for workout in workouts %}
+          <div class="workout">
+            <h4>{{ workout.title }}</h4>
+            <p>{{ workout.description }}</p>
+            <iframe
+              src="{{ workout.video_url }}"
+              frameborder="0"
+              allowfullscreen
+            ></iframe>
+          </div>
+          {% endfor %} {% else %}
+          <p>No workouts available for this day.</p>
+          {% endif %}
+        </div>
       </div>
     </div>
 
     <script>
+      // JavaScript для навигации по неделям и отображения тренировок
       const calendarDays = document.getElementById("calendar-days");
       const currentWeekLabel = document.getElementById("current-week");
       const workoutDetails = document.getElementById("workout-details");
@@ -100,7 +113,7 @@
 
           if (apiDateFormat(day) === apiDateFormat(today)) {
             dayElement.classList.add("active");
-            showWorkouts(day);
+            showWorkouts(day); // Показываем тренировки для текущей даты
           }
 
           calendarDays.appendChild(dayElement);
@@ -115,23 +128,21 @@
         const dayString = apiDateFormat(day);
 
         try {
-          const response = await fetch(`/workouts/?date=${dayString}`);
+          const response = await fetch(`/workouts/api/?date=${dayString}`);
           const data = await response.json();
 
           selectedDateSpan.textContent = formatDate(day);
-          workoutList.innerHTML = "";
 
-          if (data.workouts.length > 0) {
+          if (data.workouts && data.workouts.length > 0) {
+            workoutList.innerHTML = "";
             data.workouts.forEach((workout) => {
               const workoutElement = document.createElement("div");
               workoutElement.classList.add("workout");
               workoutElement.innerHTML = `
-                        <h4>${workout.title}</h4>
-                        <p>${workout.description}</p>
-                        <iframe src="${workout.video_url}" 
-                                frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-                                allowfullscreen></iframe>
-                    `;
+                            <h4>${workout.title}</h4>
+                            <p>${workout.description}</p>
+                            <iframe src="${workout.video_url}" frameborder="0" allowfullscreen></iframe>
+                        `;
               workoutList.appendChild(workoutElement);
             });
           } else {
@@ -145,24 +156,23 @@
         }
       }
 
-      function highlightSelectedDay(selectedElement) {
-        document
-          .querySelectorAll(".calendar .day")
-          .forEach((day) => day.classList.remove("active"));
-        selectedElement.classList.add("active");
-      }
-
       document.getElementById("prev-week").addEventListener("click", () => {
         currentDate.setDate(currentDate.getDate() - 7);
         renderCalendar(currentDate);
-        workoutDetails.classList.remove("active");
       });
 
       document.getElementById("next-week").addEventListener("click", () => {
         currentDate.setDate(currentDate.getDate() + 7);
         renderCalendar(currentDate);
-        workoutDetails.classList.remove("active");
       });
+
+      function highlightSelectedDay(selectedDay) {
+        const allDays = document.querySelectorAll(".day");
+        allDays.forEach((day) => {
+          day.classList.remove("active");
+        });
+        selectedDay.classList.add("active");
+      }
 
       renderCalendar(currentDate);
     </script>
