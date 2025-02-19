@@ -4,7 +4,7 @@ from django.contrib.auth.models import User
 class UserDetails(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, unique=True, null=True)
     height = models.IntegerField()
-    weight = models.IntegerField()
+    weight = models.DecimalField(max_digits=5, decimal_places=2)
     goal_choices = [
         ('lose-weight', 'Lose Weight'),
         ('gain-muscle', 'Gain Muscle'),
@@ -19,6 +19,10 @@ class UserDetails(models.Model):
     training_level = models.CharField(max_length=50, choices=training_level_choices)
     avatar = models.ImageField(upload_to='avatars/', default='avatars/default_avatar.png', blank=True, null=True)
     birth_date = models.DateField(null=True)
+    
+    class Meta:
+        verbose_name = 'user information'
+        verbose_name_plural = 'user information'
 
     def __str__(self):
         return self.user.username
@@ -26,7 +30,7 @@ class UserDetails(models.Model):
 
 class WeightRecord(models.Model):
     user = models.ForeignKey(UserDetails, on_delete=models.CASCADE)
-    weight = models.IntegerField()
+    weight = models.DecimalField(max_digits=5, decimal_places=2)
     date = models.DateField()
 
     def __str__(self):
@@ -35,7 +39,7 @@ class WeightRecord(models.Model):
 class UserProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     height = models.PositiveIntegerField(default=150)
-    weight = models.PositiveIntegerField(default=50)
+    weight = models.DecimalField(max_digits=5, decimal_places=2)
     goal = models.CharField(max_length=50, choices=[
         ('Lose Weight', 'Lose Weight'),
         ('Gain Muscle', 'Gain Muscle'),

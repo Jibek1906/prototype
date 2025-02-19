@@ -1,10 +1,10 @@
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
-from .models import Workout
+from .models import Workout  # ✅ Используем модель из models.py
 from users.models import UserDetails
 from datetime import datetime
-from django.db.models import F, ExpressionWrapper, IntegerField, Q
+from django.db.models import Q
 
 @login_required
 def workouts_view(request):
@@ -23,22 +23,19 @@ def workouts_view(request):
         except ValueError:
             return render(request, 'workouts.html', {'error': 'Invalid date format'})
 
-        workouts = Workout.objects.filter(
-            day_of_week=day_of_week,
-            goal=user_details.goal,
-            training_level=user_details.training_level,
-            min_weight__lte=user_details.weight,
-            max_weight__gte=user_details.weight
-        ).filter(
-            (week_number % F('repeat_interval')) == 0
+        # Получение всех тренировок, соответствующих пользователю
+        all_workouts = Workout.objects.filter(
+            Q(goal=user_details.goal) &
+            Q(training_level=user_details.training_level) &
+            Q(min_weight__lte=user_details.weight) &
+            Q(max_weight__gte=user_details.weight)
         )
 
-        # Проверяем, какие тренировки фильтруются
-        print(f"Filtering workouts for {user_details.user.username}:")
-        print(f"Goal: {user_details.goal}, Training Level: {user_details.training_level}")
-        print(f"Weight: {user_details.weight}, Day: {day_of_week}, Week: {week_number}")
-        print(f"Filtered workouts: {list(workouts)}")
-
+        # Фильтрация по неделям и дням
+        workouts = [
+            workout for workout in all_workouts
+            if week_number % workout.repeat_interval_weeks == 0 and day_of_week in workout.repeat_days
+        ]
     else:
         workouts = Workout.objects.none()
 
@@ -50,7 +47,7 @@ def workouts_view(request):
 @login_required
 def workouts_api(request):
     try:
-        user_details, created = UserDetails.objects.get_or_create(
+        user_details, _ = UserDetails.objects.get_or_create(
             user=request.user,
             defaults={
                 'height': 170,
@@ -72,17 +69,23 @@ def workouts_api(request):
     except ValueError:
         return JsonResponse({'error': 'Invalid date format'}, status=400)
 
-    # Используем Q для сложных условий
-    workouts = Workout.objects.annotate(
-        week_mod=ExpressionWrapper(F('week_number') % F('repeat_interval'), output_field=IntegerField())
-    ).filter(
-        Q(day_of_week=day_of_week) &
+    # Получение всех тренировок, соответствующих пользователю
+    all_workouts = Workout.objects.filter(
         Q(goal=user_details.goal) &
         Q(training_level=user_details.training_level) &
         Q(min_weight__lte=user_details.weight) &
-        Q(max_weight__gte=user_details.weight) &
-        Q(week_mod=0)  # Фильтруем по остатку от деления
-        ).values('title', 'description', 'video_url')
+        Q(max_weight__gte=user_details.weight)
+    )
 
+    # Фильтрация по неделям и дням
+    filtered_workouts = [
+        workout for workout in all_workouts
+        if week_number % workout.repeat_interval_weeks == 0 and day_of_week in workout.repeat_days
+    ]
 
-    return JsonResponse({'workouts': list(workouts)}, safe=False)
+    return JsonResponse({'workouts': [{
+        'title': w.title,
+        'description': w.description,
+        'video_url': w.video_url,
+        'video_file': w.video_file.url if w.video_file else None
+    } for w in filtered_workouts]}, safe=False)

@@ -4,7 +4,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Личный кабинет</title>
+    <title>Personal Office</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="stylesheet" href="{% static 'css/personal_office.css' %}" />
     <style>
@@ -68,28 +68,7 @@
     </style>
   </head>
   <body>
-    <header class="header">
-      <div class="logo">VIBE<span>FIT</span></div>
-      <nav>
-        <ul>
-          <li>
-            <a href="#"><h2>Main</h2></a>
-          </li>
-          <li>
-            <a href="#"><h2>About Us</h2></a>
-          </li>
-          <li>
-            <a href="#"><h2>Contacts</h2></a>
-          </li>
-          <li>
-            <a href="{% url 'workouts_api' %}"><h2>Workouts</h2></a>
-          </li>
-          <li>
-            <a href=""><h2>Nutrition</h2></a>
-          </li>
-        </ul>
-      </nav>
-    </header>
+    {% include 'components/header.html' %}
 
     <div class="container">
       <div class="card">
@@ -140,6 +119,7 @@
               type="number"
               name="weight"
               value="{{ user_details.weight }}"
+              step="0.01"
               required
             />
           </div>
@@ -180,10 +160,8 @@
       </div>
     </div>
 
-    <footer>
-      <p>&copy; 2024 VibeFit. All rights reserved.</p>
-    </footer>
-
+    {% include 'components/footer.html' %}
+    
     <script>
       const editBtn = document.getElementById('editBtn');
       const modal = document.getElementById('editModal');

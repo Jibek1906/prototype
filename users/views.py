@@ -9,6 +9,8 @@ from datetime import datetime
 from .forms import LoginForm
 from .models import UserDetails, WeightRecord
 from .forms import CustomUserCreationForm
+from django.http import JsonResponse
+from decimal import Decimal
 
 def main(request):
     return render(request, 'main.html')
@@ -18,8 +20,8 @@ def register(request):
         form = CustomUserCreationForm(request.POST)
         if form.is_valid():
             user = form.save()
-            
-            UserDetails.objects.get_or_create(
+
+            user_details, created = UserDetails.objects.get_or_create(
                 user=user,
                 defaults={
                     'height': 170,
@@ -29,12 +31,20 @@ def register(request):
                     'birth_date': '2000-01-01'
                 }
             )
-            
-            login(request, user)
-            return redirect('personal_office')
+
+            return redirect('user_details', user_id=user.id)
     else:
         form = CustomUserCreationForm()
+    
     return render(request, 'registration.html', {'form': form})
+
+def check_email(request):
+    email = request.GET.get('email', None)
+    print(f"Checking email: {email}")
+    if email and User.objects.filter(email=email).exists():
+        return JsonResponse({'error': 'This email already in use.'})
+    return JsonResponse({'success': True})
+
 
 def login_view(request):
     if request.method == 'POST':
@@ -75,8 +85,14 @@ def user_details(request, user_id):
 
     if form.is_valid():
         form.save()
+
+        user.backend = 'users.backend.EmailAuthBackend'
+        login(request, user)
+
         return redirect('login')
+
     return render(request, 'user_details.html', {'form': form, 'user_details': user_details})
+
 
 def calculate_age(birth_date):
     today = datetime.today()
@@ -86,20 +102,16 @@ def calculate_age(birth_date):
 def personal_office(request):
     user_details = get_object_or_404(UserDetails, user=request.user)
     weight_records = WeightRecord.objects.filter(user=user_details).order_by('date')
-
     birth_date = user_details.birth_date
     age = calculate_age(birth_date)
-
-    labels = [record.date.strftime('%d.%m.%Y') for record in weight_records]
-    weights = [record.weight for record in weight_records]
-
+    labels = [record.date.strftime('%Y-%m-%d') for record in weight_records]
+    weights = [float(record.weight) for record in weight_records]
     context = {
         'user_details': user_details,
         'labels': labels,
         'weights': weights,
         'age': age,
     }
-
     return render(request, 'personal_office.html', context)
 
 @login_required
@@ -107,6 +119,9 @@ def update_user_details(request, user_id):
     user_details = get_object_or_404(UserDetails, user__id=user_id)
     if request.method == 'POST':
         new_weight = request.POST.get('weight')
+        if new_weight:
+            new_weight = Decimal(new_weight)
+
         new_height = request.POST.get('height')
         new_goal = request.POST.get('goal')
         new_training_level = request.POST.get('training_level')
@@ -129,5 +144,13 @@ def update_user_details(request, user_id):
         )
 
         return redirect('personal_office')
+    
+    weight_records = WeightRecord.objects.filter(user=user_details).order_by('date')
+    labels = [record.date.strftime('%Y-%m-%d') for record in weight_records]
+    weights = [record.weight for record in weight_records]
 
-    return render(request, 'users/personal_office.html', {'user_details': user_details})
+    return render(request, 'users/personal_office.html', {
+        'user_details': user_details,
+        'labels': labels,
+        'weights': weights
+    })

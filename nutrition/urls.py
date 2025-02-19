@@ -1,6 +1,6 @@
-# from django.urls import path
-# from . import views
+from django.urls import path
+from . import views
 
-# urlpatterns = [
-#     path('calculate/', views.calculate_calories, name='calculate_calories'),
-# ]
+urlpatterns = [
+    path('', views.calculate_calories, name='nutrition'),
+    ]

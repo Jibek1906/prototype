@@ -24,6 +24,20 @@
         margin-bottom: 15px;
         border-radius: 5px;
       }
+      .password-field {
+        position: relative;
+      }
+      .toggle-password {
+        position: absolute;
+        top: 50%;
+        right: 10px;
+        transform: translateY(-50%);
+        background: none;
+        border: none;
+        cursor: pointer;
+        color: #007bff;
+        font-size: 16px;
+      }
     </style>
   </head>
   <body>
@@ -37,7 +51,6 @@
         </div>
         <div class="form-container">
           <h1>Login</h1>
-          <!-- Сообщения об общих ошибках -->
           {% if form.non_field_errors %}
           <div class="form-errors">
             {% for error in form.non_field_errors %}
@@ -49,7 +62,9 @@
             {% csrf_token %} {% for field in form %}
             <div class="form-field">
               <label for="{{ field.id_for_label }}">{{ field.label }}</label>
-              {{ field }} {% if field.errors %}
+              {% if field.name == "password" %}
+              <div class="password-field">{{ field }}</div>
+              {% else %} {{ field }} {% endif %} {% if field.errors %}
               <div class="error-messages">
                 {% for error in field.errors %}
                 <p class="error">{{ error }}</p>
@@ -58,20 +73,9 @@
               {% endif %}
             </div>
             {% endfor %}
-            <button class="cta-button" type="submit">Sign Up</button>
+            <button class="cta-button" type="submit">Login</button>
           </form>
 
-          <script>
-            document
-              .querySelector("#id_password")
-              .addEventListener("input", function () {
-                if (this.type === "password") {
-                  this.type = "text";
-                } else {
-                  this.type = "password";
-                }
-              });
-          </script>
           <p>
             Don't have an account? <a href="{% url 'register' %}">Sign Up</a>
           </p>
